@@ -16,17 +16,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Set the view's delegate
+        setupScene()
+    }
+    
+    private func setupScene() {
         sceneView.delegate = self
-        
-        // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
-        // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
-        
-        // Set the scene to the view
+        let scene = SCNScene(named: "art.scnassets/GameScene.scn")!
         sceneView.scene = scene
     }
     
@@ -36,40 +32,39 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
 
-        // Run the view's session
+        configuration.detectionObjects = ARReferenceObject.referenceObjects(inGroupNamed: "ObjectModels", bundle: Bundle.main)!
         sceneView.session.run(configuration)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        // Pause the view's session
+
         sceneView.session.pause()
     }
 
     // MARK: - ARSCNViewDelegate
     
-/*
-    // Override to create and configure nodes for anchors added to the view's session.
+
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
         let node = SCNNode()
-     
+        guard let objectAnchor = anchor as? ARObjectAnchor else { return node }
+        let plane = SCNPlane(width: CGFloat(objectAnchor.referenceObject.extent.x * 0.5), height: CGFloat(objectAnchor.referenceObject.extent.y * 0.5))
+        
+        plane.firstMaterial?.diffuse.contents = infoScene(for: objectAnchor.referenceObject)
+        plane.firstMaterial?.diffuse.contentsTransform = SCNMatrix4Translate(SCNMatrix4MakeScale(0, -1, 0), 0, 1, 0)
+        plane.cornerRadius = plane.width / 8
+        let planeNode = SCNNode(geometry: plane)
+        let objectCenter = objectAnchor.referenceObject.center
+        planeNode.position = SCNVector3Make(objectCenter.x, objectCenter.y + 0.2, objectCenter.z)
+        node.addChildNode(planeNode)
         return node
     }
-*/
     
-    func session(_ session: ARSession, didFailWithError error: Error) {
-        // Present an error message to the user
-        
+    func infoScene(for arObject: ARReferenceObject) -> SKScene {
+        let scene = SKScene(fileNamed: "HelloScene.sks")!
+     
+        return scene
     }
+
     
-    func sessionWasInterrupted(_ session: ARSession) {
-        // Inform the user that the session has been interrupted, for example, by presenting an overlay
-        
-    }
-    
-    func sessionInterruptionEnded(_ session: ARSession) {
-        // Reset tracking and/or remove existing anchors if consistent tracking is required
-        
-    }
 }
